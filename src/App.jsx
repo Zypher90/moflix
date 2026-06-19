@@ -3,9 +3,12 @@ import heroImage from "./assets/hero.png"
 import {useEffect, useState} from "react";
 import Spinner from "./components/Spinner"
 import MovieCard from "./components/MovieCard"
+import {useDebounce} from "react-use"
+// import {updateSearchCount} from "./appwrite.js";
 
 const BASE_URL = "https://api.themoviedb.org/3"
-const API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjOGMyYmI4YjgzOTM1YTRiY2YxYzQ0MWM2ODExNWE4OCIsIm5iZiI6MTc3NDA4NjI3OC4zODYsInN1YiI6IjY5YmU2ODg2NjIzZTQwODM2ZGE1ZTEwYiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.MjRIoz3vv6CjvCjF9NOgSSQEJvMWRRB0d3y2Ykt2gck";
+
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY
 
 const API_OPTIONS = {
     method: 'GET',
@@ -20,6 +23,9 @@ const App = () => {
     const [errMessage, setErrMessage] = useState(null)
     const [movieList, setMovieList] = useState([])
     const [loading, setLoading] = useState(false)
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+
+    useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm])
 
     const fetchMovies = async (query = '') => {
         setLoading(true)
@@ -44,6 +50,11 @@ const App = () => {
                 return;
             }
             setMovieList(data.results);
+
+            // if(query && data.results.length > 0){
+            //     await updateSearchCount(query, data.results[0]);
+            // }
+
         }catch(e){
             console.log(e)
             setErrMessage(`Error fetching movies`)
@@ -52,9 +63,10 @@ const App = () => {
         }
     }
 
+
     useEffect(() => {
-        fetchMovies(searchTerm)
-    },[searchTerm])
+        fetchMovies(debouncedSearchTerm)
+    },[debouncedSearchTerm])
 
     return (
         <>
